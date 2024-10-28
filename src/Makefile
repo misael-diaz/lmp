@@ -16,10 +16,18 @@
 
 include make-inc
 
-all: $(GLOBAL_O)
+all: $(LMP)
 
-$(GLOBAL_O):
+$(GLOBAL_O): $(GLOBAL_C)
 	$(CC) $(CCOPT) -c $(GLOBAL_C) -o $(GLOBAL_O)
+$(INITIALIZE_O): $(INITIALIZE_C)
+	$(CC) $(CCOPT) -c $(INITIALIZE_C) -o $(INITIALIZE_O)
+$(INPUT_O): $(INPUT_C)
+	$(CC) $(CCOPT) -c $(INPUT_C) -o $(INPUT_O)
+$(LAMMPS_O): $(LAMMPS_C)
+	$(CC) $(CCOPT) -c $(LAMMPS_C) -o $(LAMMPS_O)
+$(LMP): $(GLOBAL_O) $(INITIALIZE_O) $(INPUT_O) $(LAMMPS_O)
+	$(CC) $(CCOPT) $(GLOBAL_O) $(INITIALIZE_O) $(INPUT_O) $(LAMMPS_O) -o $(LMP)
 
 clean:
-	rm -f *.o
+	rm -f *.o lmp
