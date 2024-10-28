@@ -14,4 +14,13 @@
 #
 
 GLOBAL_C = global.c
+INITIALIZE_C = initialize.c
+INPUT_C = input.c
+LAMMPS_C = lammps.c
+
 GLOBAL_O = global.o
+INITIALIZE_O = initialize.o
+INPUT_O = input.o
+LAMMPS_O = lammps.o
+
+LMP = lmp
