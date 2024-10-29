@@ -15,3 +15,14 @@ if you wish to supply a file instead (recommended):
 ```sh
 ./src/lmp < in.data
 ```
+
+# debug
+
+```sh
+gdb ./src/lmp
+```
+
+sets the breakpoints and use the run command with redirection (recommended):
+```sh
+run < in.data
+```
