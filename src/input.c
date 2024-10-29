@@ -147,6 +147,8 @@ void input (int *iopflag)
 	if (VERBOSE) {
 		fprintf(stdout, "nlines: %d\n", nlines);
 	}
-	free(str);
+	if (str) {
+		free(str);
+	}
 	sz_str = 0;
 }
