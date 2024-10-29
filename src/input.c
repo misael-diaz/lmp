@@ -18,8 +18,62 @@
 #include <string.h>
 #include <errno.h>
 
+#define VERBOSE 1
+
+extern int firstflag;
+
+extern int units;
+extern double boltz;
+extern double dtfactor;
+extern double pfactor;
+extern double efactor;
+extern double skin;
+extern double cutlj;
+extern double cutcoul;
+
+extern int idimension;
+
 static char *str;
 static size_t sz_str;
+
+static void in_units (char const *str)
+{
+	if (strstr(str, "real")) {
+		units = 0;
+		boltz = 0.001987191;
+		dtfactor = 48.88821;
+		pfactor = 68589.796;
+		efactor = 332.0636;
+		skin = 2.0;
+		cutlj = 10.0;
+		cutcoul = 10.0;
+		fprintf(stdout, "Units real\n");
+	} else if (strstr(str, "lj")) {
+		units = 1;
+		boltz = 1;
+		dtfactor = 1;
+		pfactor = 1;
+		efactor = 1;
+		skin = 0.3;
+		cutlj = 2.5;
+		cutcoul = 2.5;
+		fprintf(stdout, "input: Units lj\n");
+	} else {
+		fprintf(stderr, "input: bad units param\n");
+		exit(EXIT_FAILURE);
+	}
+}
+
+static void in_dimension (char const *str)
+{
+	char const *s = strstr(str, "dimension");
+	idimension = atoi(&s[9]);
+	if (2 != idimension && 3 != idimension) {
+		fprintf(stderr, "input: bad dimension param\n");
+		exit(EXIT_FAILURE);
+	}
+	fprintf(stdout, "input: Dimension %d\n", idimension);
+}
 
 void input (int *iopflag)
 {
@@ -45,10 +99,31 @@ void input (int *iopflag)
 			*iopflag = EOF;
 			break;
 		}
-		fprintf(stdout, "%s", str);
+		if (VERBOSE) {
+			fprintf(stdout, "%s", str);
+		}
+		if (strstr(str, "units")) {
+			if (firstflag) {
+				fprintf(stderr,
+					"input: Units command must be the first command "
+					"in file\n");
+				exit(EXIT_FAILURE);
+			}
+			in_units(str);
+			++nlines;
+			continue;
+		}
+		firstflag = 1;
+		if (strstr(str, "dimension")) {
+			in_dimension(str);
+			++nlines;
+			continue;
+		}
 		++nlines;
 	}
-	fprintf(stdout, "nlines: %d\n", nlines);
+	if (VERBOSE) {
+		fprintf(stdout, "nlines: %d\n", nlines);
+	}
 	free(str);
 	sz_str = 0;
 	fclose(f);
