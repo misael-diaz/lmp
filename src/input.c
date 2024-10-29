@@ -34,6 +34,11 @@ extern double cutcoul;
 extern int idimension;
 extern double dt;
 
+extern int nonstyle;
+extern int offsetflag;
+extern int mixflag;
+extern int mixstyle;
+
 static char *str;
 static size_t sz_str;
 
@@ -89,6 +94,88 @@ static void in_timestep (char const *str)
 	fprintf(stdout, "input: Timestep %le\n", dt);
 }
 
+static void in_nonbond_style (char *string)
+{
+	char const *str = string;
+	char const *prm = "nonbond style";
+	char const *none = "none";
+	char const *ljcutoff = "lj/cutoff";
+	char const *s = strstr(str, prm);
+	if (strstr(s, none)) {
+		nonstyle = 0;
+	} else if (strstr(s, ljcutoff)) {
+
+		s = strstr(s, ljcutoff);
+		s = &s[strlen(ljcutoff)];
+
+		nonstyle = 1;
+
+		char *endptr = NULL;
+		errno = 0;
+		double const cut = strtod(s, &endptr);
+		if (errno) {
+			free(string);
+			fprintf(stderr, "input: %s\n", strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+
+		if ((0 == cut) && (s == endptr)) {
+			free(string);
+			fprintf(stderr,
+				"input: conversion error missing param ljcut\n");
+			exit(EXIT_FAILURE);
+		}
+
+		errno = 0;
+		s = endptr;
+		endptr = NULL;
+		double const offset = strtod(s, &endptr);
+		if (errno) {
+			free(string);
+			fprintf(stderr, "input: %s\n", strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+
+		if ((0 == offset) && s == endptr) {
+			free(string);
+			fprintf(stderr,
+				"input: conversion error missing param offsetflag\n");
+			exit(EXIT_FAILURE);
+		}
+
+		if ((0 >= cut) || (0 != offset && 1 != offset)) {
+			free(string);
+			fprintf(stderr, "input: bad nonbond style param\n");
+			exit(EXIT_FAILURE);
+		}
+
+		cutlj = cut;
+		offsetflag = (int) offset;
+		if (0 == mixflag) {
+			mixstyle = 1;
+		}
+
+	} else {
+		free(string);
+		fprintf(stderr, "input: unsupported nonbond style\n");
+		exit(EXIT_FAILURE);
+	}
+
+	if (0 == nonstyle) {
+		fprintf(stdout, "input: Nonbond style none\n");
+	} else if (1 == nonstyle) {
+		fprintf(stdout,
+			"input: Nonbond style %s %le %d\n",
+			ljcutoff,
+			cutlj,
+			offsetflag);
+	} else {
+		free(string);
+		fprintf(stderr, "input: implementation error\n");
+		exit(EXIT_FAILURE);
+	}
+}
+
 void input (int *iopflag)
 {
 	*iopflag = 0;
@@ -131,6 +218,14 @@ void input (int *iopflag)
 
 		if (strstr(str, "dimension")) {
 			in_dimension(str);
+			++nlines;
+			continue;
+		}
+
+		// commands that can appear BEFORE or AFTER read_data and read_restart
+
+		if (strstr(str, "nonbond style")) {
+			in_nonbond_style(str);
 			++nlines;
 			continue;
 		}
