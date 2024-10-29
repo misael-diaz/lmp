@@ -110,6 +110,9 @@ void input (int *iopflag)
 		if (VERBOSE) {
 			fprintf(stdout, "%s", str);
 		}
+
+		// units (if present) must be the first command in the input script
+
 		if (strstr(str, "units")) {
 			if (firstflag) {
 				fprintf(stderr,
@@ -121,12 +124,19 @@ void input (int *iopflag)
 			++nlines;
 			continue;
 		}
+
 		firstflag = 1;
+
+		// commands that must occur BEFORE read_data and read_restart
+
 		if (strstr(str, "dimension")) {
 			in_dimension(str);
 			++nlines;
 			continue;
 		}
+
+		// integrator settings
+
 		if (strstr(str, "timestep")) {
 			in_timestep(str);
 			++nlines;
