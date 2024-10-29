@@ -34,7 +34,6 @@ extern double cutcoul;
 extern int idimension;
 extern double dt;
 
-static FILE *f;
 static char *str;
 static size_t sz_str;
 
@@ -61,7 +60,6 @@ static void in_units (char const *str)
 		cutcoul = 2.5;
 		fprintf(stdout, "input: Units lj\n");
 	} else {
-		fclose(f);
 		fprintf(stderr, "input: bad units param\n");
 		exit(EXIT_FAILURE);
 	}
@@ -72,7 +70,6 @@ static void in_dimension (char const *str)
 	char const *s = strstr(str, "dimension");
 	idimension = atoi(&s[9]);
 	if (2 != idimension && 3 != idimension) {
-		fclose(f);
 		fprintf(stderr, "input: bad dimension param\n");
 		exit(EXIT_FAILURE);
 	}
@@ -85,7 +82,6 @@ static void in_timestep (char const *str)
 	char const *s = strstr(str, prm);
 	dt = atof(&s[strlen(prm)]);
 	if (0 >= dt) {
-		fclose(f);
 		fprintf(stderr, "input: bad timestep param\n");
 		exit(EXIT_FAILURE);
 	}
@@ -95,22 +91,16 @@ static void in_timestep (char const *str)
 
 void input (int *iopflag)
 {
-	f = fopen("data.txt", "r");
-	if (!f) {
-		fprintf(stderr, "input: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
 	*iopflag = 0;
 	int nlines = 0;
 	while (1) {
 		errno = 0;
-		ssize_t rc = getline(&str, &sz_str, f);
+		ssize_t rc = getline(&str, &sz_str, stdin);
 		if (-1 == rc) {
 			if (errno) {
 				if (str) {
 					free(str);
 				}
-				fclose(f);
 				fprintf(stderr, "input: %s\n", strerror(errno));
 				exit(EXIT_FAILURE);
 			}
@@ -122,7 +112,6 @@ void input (int *iopflag)
 		}
 		if (strstr(str, "units")) {
 			if (firstflag) {
-				fclose(f);
 				fprintf(stderr,
 					"input: Units command must be the first command "
 					"in file\n");
@@ -150,5 +139,4 @@ void input (int *iopflag)
 	}
 	free(str);
 	sz_str = 0;
-	fclose(f);
 }
