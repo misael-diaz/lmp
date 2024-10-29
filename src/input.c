@@ -32,6 +32,7 @@ extern double cutlj;
 extern double cutcoul;
 
 extern int idimension;
+extern double dt;
 
 static FILE *f;
 static char *str;
@@ -78,6 +79,20 @@ static void in_dimension (char const *str)
 	fprintf(stdout, "input: Dimension %d\n", idimension);
 }
 
+static void in_timestep (char const *str)
+{
+	char const *prm = "timestep";
+	char const *s = strstr(str, prm);
+	dt = atof(&s[strlen(prm)]);
+	if (0 >= dt) {
+		fclose(f);
+		fprintf(stderr, "input: bad timestep param\n");
+		exit(EXIT_FAILURE);
+	}
+	dt /= dtfactor;
+	fprintf(stdout, "input: Timestep %le\n", dt);
+}
+
 void input (int *iopflag)
 {
 	f = fopen("data.txt", "r");
@@ -120,6 +135,11 @@ void input (int *iopflag)
 		firstflag = 1;
 		if (strstr(str, "dimension")) {
 			in_dimension(str);
+			++nlines;
+			continue;
+		}
+		if (strstr(str, "timestep")) {
+			in_timestep(str);
 			++nlines;
 			continue;
 		}
