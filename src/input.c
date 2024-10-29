@@ -42,8 +42,9 @@ extern int mixstyle;
 static char *str;
 static size_t sz_str;
 
-static void in_units (char const *str)
+static void in_units (char *string)
 {
+	char const *str = string;
 	if (strstr(str, "real")) {
 		units = 0;
 		boltz = 0.001987191;
@@ -65,28 +66,33 @@ static void in_units (char const *str)
 		cutcoul = 2.5;
 		fprintf(stdout, "input: Units lj\n");
 	} else {
+		free(string);
 		fprintf(stderr, "input: bad units param\n");
 		exit(EXIT_FAILURE);
 	}
 }
 
-static void in_dimension (char const *str)
+static void in_dimension (char *string)
 {
+	char const *str = string;
 	char const *s = strstr(str, "dimension");
 	idimension = atoi(&s[9]);
 	if (2 != idimension && 3 != idimension) {
+		free(string);
 		fprintf(stderr, "input: bad dimension param\n");
 		exit(EXIT_FAILURE);
 	}
 	fprintf(stdout, "input: Dimension %d\n", idimension);
 }
 
-static void in_timestep (char const *str)
+static void in_timestep (char *string)
 {
+	char const *str = string;
 	char const *prm = "timestep";
 	char const *s = strstr(str, prm);
 	dt = atof(&s[strlen(prm)]);
 	if (0 >= dt) {
+		free(string);
 		fprintf(stderr, "input: bad timestep param\n");
 		exit(EXIT_FAILURE);
 	}
